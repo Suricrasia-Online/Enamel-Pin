@@ -80,7 +80,7 @@ noelfver : noelfver/noelfver.c
 	make -C noelfver/
 
 shader.h : shader.frag Makefile
-	mono ./shader_minifier.exe shader.frag -o shader.h
+	mono ./shader_minifier.exe --no-renaming-list ss,main shader.frag -o shader.h
 
 $(PROJNAME).elf : $(PROJNAME).c shader.h linker.ld Makefile
 	gcc -o $@ $< $(CFLAGS)

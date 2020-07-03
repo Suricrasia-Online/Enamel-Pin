@@ -22,7 +22,7 @@ const char* vshader = "#version 430\nvoid main(){gl_Position=vec4(gl_VertexID%2=
 #define CANVAS_HEIGHT 1080
 #define SCANLINE_SIZE 10
 
-//#define DEBUG
+#define DEBUG
 #define TIME_RENDER
 #define SCISSORS
 
@@ -57,7 +57,7 @@ static void compile_shader()
 	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
 
 	char* samples = getenv("SAMPLES");
-	if (samples == NULL) samples = "300";
+	if (samples == NULL) samples = "100";
 
 	const char* shader_frag_list[] = {"#version 420\n#define SAMPLES ", samples, "\n", shader_frag};
 	glShaderSource(f, 4, shader_frag_list, NULL);

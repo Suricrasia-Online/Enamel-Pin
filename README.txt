@@ -16,8 +16,8 @@ Exit at any moment with "esc" or with your window manager's "close window" key c
 
 You can set the number of samples with the environment variable SAMPLES:
 
-env SAMPLES=300 ./enamel_pin
+env SAMPLES=100 ./enamel_pin
 
-The default number of samples is 300.
+The default number of samples is 100.
 
 BLACK LIVES MATTER - TRANS RIGHTS ARE HUMAN RIGHTS
