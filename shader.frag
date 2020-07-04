@@ -120,7 +120,7 @@ vec3 skybox(vec3 angle) {
 vec3 pixel_color( vec2 uv )
 {
 	uv.y-=.02;uv.x+=.02;
-	vec2 h2 = hash2(uv.x,uv.y);
+	vec2 h2 = tan(hash2(uv.x,uv.y));
 	vec3 cam = normalize(vec3(2.5,uv+h2*.02));
 	vec3 init = vec3(-120,-h2);
 	float yrot = -.6;
@@ -171,7 +171,7 @@ void main() {
 	vec2 uv = (gl_FragCoord.xy-vec2(960,540))/1080;
 	float sd = hash(uv.x,uv.y);
 	for (int i = 0; i < SAMPLES; i++) {
-		vec2 h2 = hash2(sd, float(i));
+		vec2 h2 = tan(hash2(sd, float(i)));
 		vec2 uv2 = uv + h2/1080;
 		fragCol += vec4(pixel_color(uv2), 1);
 	}
