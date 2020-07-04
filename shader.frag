@@ -27,7 +27,7 @@ float pin_sdf(vec2 p) {
 	float inner = length(p)-.73;
 	float angl = atan(p.y,p.x);
 	float angl2 = asin(sin(angl*5.-1.4)*.995)/5.;
-	angl = asin(sin(angl*1.3))/1.3;
+	angl = asin(sin(angl*1.3)*.99)/1.3;
 	vec2 p2 = vec2(cos(angl),sin(angl))*length(p);
 	vec2 p3 = vec2(cos(angl2),sin(angl2))*length(p);
 	float pentagram = linedist(p3, vec2(0.67,0.22),vec2(0.25,-0.07));
