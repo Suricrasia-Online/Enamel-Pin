@@ -1,4 +1,5 @@
 ### enamel pin - blackle / suricrasia online ###
+BLACK LIVES MATTER - TRANS RIGHTS ARE HUMAN RIGHTS
 
 enamel pin is a 4k exegfx for 64-bit linux, specifically targeting Ubuntu 18.10
 
@@ -18,6 +19,4 @@ You can set the number of samples with the environment variable SAMPLES:
 
 env SAMPLES=100 ./enamel_pin
 
-The default number of samples is 100.
-
-BLACK LIVES MATTER - TRANS RIGHTS ARE HUMAN RIGHTS
+The default number of samples is 100. It takes about 6 seconds to render on a 1660 Ti.
