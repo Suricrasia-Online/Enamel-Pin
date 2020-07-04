@@ -41,7 +41,7 @@ float pin_sdf(vec2 p) {
 	arms = smin(arms, max(cplane2,bars),.05);
 
 	float arrow = box((p2-vec2(1.9,0))*vec2(.6,1)*rot, vec2(.2,.2));
-	arrow = -smin(-arrow, p2.x-1.9, .1);
+	arrow = -smin(-arrow, p2.x-1.9, .03);
 	arms = smin(arms, max(cplane1,arrow),.05);
 
 	//bar on bottom of bottom leg
@@ -93,12 +93,14 @@ float scene(vec3 p) {
 	p3=erot(p3,vec3(.997,0,-.075),2.45);
 	float pinsdf = pin_sdf(p3.yz/13.)*13.;
 	p3 += p2/30.;
-	float pin_inside = box(vec2(pinsdf+2., p3.x-sqrt(sqrt(smoothstep(0.,-1.7,pinsdf)))*.1), vec2(2.,.9))-.2;
 	p3 += sin(p.yxz*10.)/1000.;
+	float ln = dot(p3.yz,p3.yz)/14.;
 	float bump = smoothstep(1.1,1.5,sin(p.y*60.+sin(p.y*4.6)*1.35)+sin(p.z*50.+sin(p.z*5.6)*1.5));
-	bump += smoothstep(1.1,1.5,sin(p.y*90.+sin(p.y*5.6)*1.45)+sin(p.z*80.+sin(p.z*7.6)*1.55))*.5;
-	pin_edge = box(vec2(pinsdf, p3.x), vec2(.15+cos(p3.y/10.)*0.05,1.))-.15+bump/900.;
-	pin_edge = mix(pin_edge, linedist(vec2(pinsdf, p3.x), vec2(0,1),vec2(0,-1))-.3,0.01);
+	bump += smoothstep(1.1,1.3,sin(p.y*90.+sin(p.y*5.6)*1.45)+sin(p.z*80.+sin(p.z*7.6)*1.55));
+	float pin_inside = box(vec2(pinsdf+2., p3.x-sqrt(sqrt(smoothstep(0.,-1.7,pinsdf)))*.1), vec2(2.,.85-ln*.005))-.2;
+
+	pin_edge = box(vec2(pinsdf, p3.x), vec2(.12+cos(p3.y/20.)*0.05-ln*.001,1.-ln*.005))-.12+bump/1500.;
+	pin_edge = mix(pin_edge, linedist(vec2(pinsdf, p3.x), vec2(0.5,1),vec2(0,-1))-.3,0.005);
 	return min(fabric,min(pin_edge,pin_inside));
 }
 
@@ -169,7 +171,7 @@ void main() {
 	vec2 uv = (gl_FragCoord.xy-vec2(960,540))/1080;
 	float sd = hash(uv.x,uv.y);
 	for (int i = 0; i < SAMPLES; i++) {
-		vec2 h2 = tan(hash2(sd, float(i)));
+		vec2 h2 = hash2(sd, float(i));
 		vec2 uv2 = uv + h2/1080;
 		fragCol += vec4(pixel_color(uv2), 1);
 	}
