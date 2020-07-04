@@ -93,11 +93,13 @@ float scene(vec3 p) {
 	p3.x-=6.;
 	p3=erot(p3,vec3(.997,0,-.075),2.45);
 	float pinsdf = pin_sdf(p3.yz/13.)*13.;
-	p3 += p2/40.;
+	p3 += p2/30.;
 	float pin_inside = box(vec2(pinsdf+2., p3.x-sqrt(sqrt(smoothstep(0.,-1.7,pinsdf)))*.1), vec2(2.,.9))-.2;
 	p3 += sin(p.yxz*10.)/1000.;
-	pin_edge = box(vec2(pinsdf, p3.x), vec2(.15+cos(p3.y/10.)*0.05,1.))-.15;
-	pin_edge = mix(pin_edge, linedist(vec2(pinsdf, p3.x), vec2(0,1),vec2(0,-1))-.3,0.05);
+	float bump = smoothstep(1.1,1.5,sin(p.y*60.+sin(p.y*4.6)*1.35)+sin(p.z*50.+sin(p.z*5.6)*1.5));
+	bump += smoothstep(1.1,1.5,sin(p.y*90.+sin(p.y*5.6)*1.45)+sin(p.z*80.+sin(p.z*7.6)*1.55))*.5;
+	pin_edge = box(vec2(pinsdf, p3.x), vec2(.15+cos(p3.y/10.)*0.05,1.))-.15+bump/800.;
+	pin_edge = mix(pin_edge, linedist(vec2(pinsdf, p3.x), vec2(0,1),vec2(0,-1))-.3,0.01);
 	return min(fabric,min(pin_edge,pin_inside));
 }
 
@@ -110,7 +112,7 @@ const vec3 suncol = vec3(1.5,1.0,0.7);
 const vec3 skycol = vec3(0.4,0.75,1.0);
 const vec3 sundir = normalize(vec3(-1,0.,1.2));
 vec3 skybox(vec3 angle) {
-	return mix(vec3(1),skycol, angle.x*angle.x)
+	return mix(vec3(1),skycol, angle.x*angle.x) 
 		+ pow(max(dot(angle, sundir),0.0),350.0)*suncol*15.0;
 }
 
@@ -150,8 +152,19 @@ vec3 pixel_color( vec2 uv )
 	float ao = smoothstep(-1.,2.,scene(p+n*.5+sundir*3.));//*smoothstep(-.02,0.02,scene(p+n*.02));
 	vec3 col = (spec*.3*skycol*(ao*.2+.7) +
 		((pow(spec,8.)*.1*suncol+ pow(spec,20.))*4.)*mat+
-		 (mat*.8+.2)*(pow(spec,80.)*3.+ step(0.999-mat*.01,spec)*10.))*fres*ao;
+		(mat*.8+.2)*(pow(spec,80.)*3.+ step(0.999-mat*.01,spec)*10.))*fres*ao;
 	return (hit ? col : skybox(cam))*atten;
+}
+
+//blessed be mattz for posting the code to fit garbor functions to arbitrary images!
+//from https://www.shadertoy.com/view/4ljSRR
+//this is used to hardcode the bloom >:3
+float gabor(vec2 p, float u, float v, float r, float ph, float l, float t, float s, float h) {
+	float cr = cos(r);
+	float sr = sin(r);
+	vec2 st = vec2(s,t);
+	p = mat2(cr, -sr, sr, cr) * vec2(p.x-u,-p.y-v);
+	return h * exp(dot(vec2(-0.5), p*p/(st*st))) * cos(p.x*6.2831853/l+ph);
 }
 
 void main() {
@@ -160,11 +173,29 @@ void main() {
 	float sd = hash(uv.x,uv.y);
 	for (int i = 0; i < SAMPLES; i++) {
 		vec2 h2 = tan(hash2(sd, float(i)));
-		//if (i %5!=0)h2=tan(h2)*72; //todo: hardcode the bloom!
 		vec2 uv2 = uv + h2/1080;
-		fragCol += vec4(pixel_color(uv2), 1);//*(i%5!=0?.3:1.);
+		fragCol += vec4(pixel_color(uv2), 1);
 	}
+
+	vec2 p = uv*1.1+ vec2(-.03,0.03);//for some reason, imfit produces offset images :c
+	float k = 0.0;
+
+	k+=gabor(p,0.04, 0.01, 5.23, 5.14, 3.70, 0.15, 0.15, 2.00);
+	k+=gabor(p,-0.61, 1.00, 2.44, 3.71, 4.00, 0.80, 0.80, 0.14);
+	k+=gabor(p,0.01, -0.25, 4.72, 5.12, 0.52, 0.12, 0.12, 0.18);
+	k+=gabor(p,0.59, 1.00, 5.73, 1.74, 4.00, 0.67, 0.48, 0.17);
+	k+=gabor(p,0.28, 0.00, 4.51, 6.15, 0.36, 0.18, 0.18, 0.10);
+	k+=gabor(p,0.09, -0.16, 3.09, 6.28, 0.37, 0.18, 0.09, 0.14);
+	k+=gabor(p,0.92, -0.66, 4.78, 4.44, 4.00, 1.15, 0.14, 0.49);
+	k+=gabor(p,-0.89, -0.63, 0.83, 1.09, 1.31, 0.73, 0.56, 0.05);
+	k+=gabor(p,0.14, -0.09, 1.54, 6.28, 0.19, 0.06, 0.06, 0.19);
+	k+=gabor(p,-0.43, 0.34, 2.43, 3.83, 0.71, 0.39, 0.36, 0.05);
+
 	fragCol/=fragCol.w;
+	float bloom = k*.8+.2;
+	vec4 bbright = vec4(0xaf,0x84,0x6a,0)/128.;
+	vec4 bmid = vec4(0x15,0x17,0x19,0)/60.;
+	fragCol = mix(fragCol,mix(bmid, bbright,(max(bloom,0.1)-.1)/.9)*sqrt(bloom),0.6);
 	fragCol *= (1.0 - dot(uv,uv)*0.30); //vingetting lol
-	fragCol = (smoothstep(vec4(-.32),vec4(1.), log(fragCol+1.0))-.2)/.8; //colour grading
+	fragCol = (smoothstep(vec4(-.34),vec4(1.), log(fragCol+1.0))-.2)/.8; //colour grading
 }
