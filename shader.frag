@@ -194,7 +194,7 @@ void main() {
 	float bloom = k*.9+.2;
 	vec4 bbright = vec4(0xaf,0x84,0x6a,0)/128.;
 	vec4 bmid = vec4(0x15,0x17,0x19,0)/60.;
-	fragCol = mix(fragCol,mix(bmid, bbright,(max(bloom,0.1)-.1)/.9)*sqrt(bloom),0.6);
+	fragCol = mix(fragCol,mix(bmid, bbright,(max(bloom,0.1)-.1)/.9)*sqrt(bloom),0.6) + sd*sd*.02;
 	fragCol *= (1.0 - dot(uv,uv)*0.30); //vingetting lol
 	fragCol = (smoothstep(vec4(-.34),vec4(1.), log(fragCol+1.0))-.2)/.8; //colour grading
 }
