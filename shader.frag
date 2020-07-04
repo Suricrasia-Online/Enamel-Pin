@@ -22,7 +22,6 @@ float linedist(vec2 p, vec2 a, vec2 b) {
 }
 
 float pin_sdf(vec2 p) {
-	//p+=sin(p.y*10.)*sin(p.x*10.)*.005;
 	p+=sin(p.y*15.)*sin(p.x*15.)*.002;
 	float inner = length(p)-.73;
 	float angl = atan(p.y,p.x);
@@ -119,8 +118,6 @@ vec3 skybox(vec3 angle) {
 vec3 pixel_color( vec2 uv )
 {
 	uv.y-=.02;uv.x+=.02;
-	//uv /= 2.5;uv-=.3;
-	// Time varying pixel color
 	vec2 h2 = hash2(uv.x,uv.y);
 	vec3 cam = normalize(vec3(2.5,uv+h2*.02));
 	vec3 init = vec3(-120,-h2);
@@ -149,7 +146,7 @@ vec3 pixel_color( vec2 uv )
 	vec3 r = reflect(cam,n);
 	float spec = max(0.,dot(r,sundir));
 	float fres = 1.-abs(dot(cam,n))*.9;
-	float ao = smoothstep(-1.,2.,scene(p+n*.5+sundir*3.));//*smoothstep(-.02,0.02,scene(p+n*.02));
+	float ao = smoothstep(-1.,2.,scene(p+n*.5+sundir*3.));
 	vec3 col = (spec*.3*skycol*(ao*.2+.7) +
 		((pow(spec,8.)*.1*suncol+ pow(spec,20.))*4.)*mat+
 		(mat*.8+.2)*(pow(spec,80.)*3.+ step(0.999-mat*.01,spec)*10.))*fres*ao;
