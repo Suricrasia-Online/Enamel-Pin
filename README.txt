@@ -11,7 +11,7 @@ and whatever package gives you libgl (depends on graphics card)
 
 Two versions of the demo are distributed. enamel_pin is the size optimized, packed version. enamel_pin_unpacked is the unpacked version that is missing some heavy size optimizations.
 
-This exegfx will not render on resolutions lower than 1920x1080. What it produces at higher resolutions is untested.
+This exegfx renders an image with a resolution of 1920x1080. On smaller screens it will be clipped, and on larger screens it will be rendered in the corner.
 
 Exit at any moment with "esc" or with your window manager's "close window" key combo.
 

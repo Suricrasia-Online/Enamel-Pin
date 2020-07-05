@@ -37,6 +37,7 @@ GLuint p;
 bool rendered = false;
 bool flipped = false;
 
+GdkWindow* window;
 #ifdef TIME_RENDER
 GTimer* gtimer;
 #endif
@@ -127,7 +128,7 @@ static gboolean
 on_render (GtkGLArea *glarea, GdkGLContext *context)
 {
 	(void)context;
-	if (rendered || gtk_widget_get_allocated_width((GtkWidget*)glarea) < CANVAS_WIDTH) return TRUE;
+	if (rendered || !(gdk_window_get_state(window) & GDK_WINDOW_STATE_FULLSCREEN)) return TRUE;
 	if (!flipped) { gtk_gl_area_queue_render(glarea); flipped = true; return TRUE; }
 	compile_shader();
 
@@ -179,7 +180,7 @@ void _start() {
 	gtk_widget_show_all (win);
 
 	gtk_window_fullscreen((GtkWindow*)win);
-	GdkWindow* window = gtk_widget_get_window(win);
+	window = gtk_widget_get_window(win);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 	GdkCursor* Cursor = gdk_cursor_new(GDK_BLANK_CURSOR);
