@@ -16,7 +16,7 @@
 #include "sys.h"
 
 #include "shader.h"
-const char* vshader = "#version 430\nvoid main(){gl_Position=vec4(gl_VertexID%2==0?-1:1,gl_VertexID%4/2==0?-1:1,1,1);}";
+const char* vshader = "#version 420\nvoid main(){gl_Position=vec4(gl_VertexID%2==0?-1:1,gl_VertexID%4/2==0?-1:1,1,1);}";
 
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
@@ -153,7 +153,7 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 #endif
   return TRUE;
 }
-
+__attribute__((__externally_visible__, __section__(".text.startup._start"), __noreturn__))
 void _start() {
 	asm volatile("sub $8, %rsp\n");
 #ifdef TIME_RENDER
@@ -189,4 +189,5 @@ void _start() {
 	gtk_main();
 
 	quit_asm();
+	__builtin_unreachable();
 }
