@@ -26,6 +26,7 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 #define DEBUG_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
+#define EXIT_USING_ESC_KEY
 
 bool rendered = false;
 bool flipped = false;
@@ -35,6 +36,7 @@ GdkWindow* window;
 GTimer* gtimer;
 #endif
 
+#ifdef EXIT_USING_ESC_KEY
 static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 {
 	(void)widget;
@@ -45,6 +47,7 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 
 	return FALSE;
 }
+#endif
 
 __attribute__((always_inline))
 static inline void compile_shader()
@@ -127,8 +130,9 @@ void _start() {
 	gtk_container_add(GTK_CONTAINER(win), glarea);
 
 	g_signal_connect(win, "destroy", &&quit_asm, NULL);
+#ifdef EXIT_USING_ESC_KEY
 	g_signal_connect(win, "key_press_event", G_CALLBACK(check_escape), NULL);
-	// g_signal_connect(glarea, "realize", G_CALLBACK(on_realize), NULL);
+#endif
 	g_signal_connect(glarea, "render", G_CALLBACK(on_render), NULL);
 
 	gtk_widget_show_all (win);
