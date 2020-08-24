@@ -1,4 +1,4 @@
-#define GL_GLEXT_PROTOTYPES why
+#define GL_GLEXT_PROTOTYPES
 
 #include<stdio.h>
 #include<stdbool.h>
@@ -17,9 +17,9 @@
 
 #include "shader.h"
 const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void main(){gl_Position=vec4(gl_VertexID%2*2-1,gl_VertexID/2*.1-1,1,1);}";
+
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
-#define SCANLINE_SIZE 10
 
 #define DEBUG_FRAG
 // #define DEBUG_VERT
@@ -46,7 +46,8 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 	return FALSE;
 }
 
-static void compile_shader()
+__attribute__((always_inline))
+static inline void compile_shader()
 {
 	char* samples = getenv("SAMPLES");
 	if (samples == NULL) samples = "100";
