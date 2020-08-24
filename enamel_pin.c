@@ -16,21 +16,16 @@
 #include "sys.h"
 
 #include "shader.h"
-const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void main(){gl_Position=vec4(sin(gl_VertexID*2)*4,cos(gl_VertexID*2)*4,1,1);}";
+const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void main(){gl_Position=vec4(gl_VertexID%2*8-4,gl_VertexID/2*8-1,1,1);}";
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
 #define SCANLINE_SIZE 10
 
 #define DEBUG_FRAG
 // #define DEBUG_VERT
-// #define DEBUG_PROG
+#define DEBUG_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define SCISSORS
-
-static void quit_asm() {
-	SYS_exit_group(0);
-	__builtin_unreachable();
-}
 
 GLuint vao;
 GLuint p;
@@ -47,7 +42,8 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 {
 	(void)widget;
 	if (event->keyval == GDK_KEY_Escape) {
-		quit_asm();
+		SYS_exit_group(0);
+		__builtin_unreachable();
 	}
 
 	return FALSE;
@@ -65,13 +61,14 @@ static void compile_shader()
 
 #ifdef DEBUG_FRAG
 	GLint ok;
+	char error[DEBUG_BUFFER_SIZE];
 	glGetProgramiv(f, GL_LINK_STATUS, &ok);
+	glGetProgramInfoLog(f, DEBUG_BUFFER_SIZE, NULL, error);
 	if(!ok) {
-		char error[4096];
-		glGetProgramInfoLog(f, 4096, NULL, error);
 		printf(error);
 
-		quit_asm();
+		SYS_exit_group(-1);
+		__builtin_unreachable();
 	}
 #endif
 
@@ -79,12 +76,12 @@ static void compile_shader()
 
 #ifdef DEBUG_VERT
 	glGetProgramiv(v, GL_LINK_STATUS, &ok);
+	glGetProgramInfoLog(v, DEBUG_BUFFER_SIZE, NULL, error);
 	if(!ok) {
-		char error[4096];
-		glGetProgramInfoLog(v, 4096, NULL, error);
 		printf(error);
 
-		quit_asm();
+		SYS_exit_group(-1);
+		__builtin_unreachable();
 	}
 #endif
 
@@ -130,7 +127,7 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 }
 __attribute__((__externally_visible__, __section__(".text.startup._start"), __noreturn__))
 void _start() {
-	asm volatile("sub $8, %rsp\n");
+	asm volatile("push %rax\n");
 #ifdef TIME_RENDER
 	gtimer = g_timer_new();
 #endif
@@ -146,7 +143,7 @@ void _start() {
 	GtkWidget *glarea = gtk_gl_area_new();
 	gtk_container_add(GTK_CONTAINER(win), glarea);
 
-	g_signal_connect(win, "destroy", quit_asm, NULL);
+	g_signal_connect(win, "destroy", &&quit_asm, NULL);
 	g_signal_connect(win, "key_press_event", G_CALLBACK(check_escape), NULL);
 	// g_signal_connect(glarea, "realize", G_CALLBACK(on_realize), NULL);
 	g_signal_connect(glarea, "render", G_CALLBACK(on_render), NULL);
@@ -163,6 +160,7 @@ void _start() {
 
 	gtk_main();
 
-	quit_asm();
+quit_asm:
+	SYS_exit_group(0);
 	__builtin_unreachable();
 }
