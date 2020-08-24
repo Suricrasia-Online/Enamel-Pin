@@ -27,9 +27,6 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
 
-GLuint vao;
-GLuint p;
-
 bool rendered = false;
 bool flipped = false;
 
@@ -51,46 +48,37 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 
 static void compile_shader()
 {
-	// compile shader
-
 	char* samples = getenv("SAMPLES");
 	if (samples == NULL) samples = "100";
 
 	const char* shader_frag_list[] = {"#version 420\n#define SAMPLES ", samples, "\n", shader_frag};
 	GLuint f = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 4, shader_frag_list);
 
-#ifdef DEBUG_FRAG
-	GLint ok;
-	char error[DEBUG_BUFFER_SIZE];
-	glGetProgramiv(f, GL_LINK_STATUS, &ok);
-	glGetProgramInfoLog(f, DEBUG_BUFFER_SIZE, NULL, error);
-	if(!ok) {
-		printf(error);
-
-		SYS_exit_group(-1);
-		__builtin_unreachable();
-	}
-#endif
-
 	GLuint v = glCreateShaderProgramv(GL_VERTEX_SHADER, 1, &vshader);
 
-#ifdef DEBUG_VERT
-	glGetProgramiv(v, GL_LINK_STATUS, &ok);
-	glGetProgramInfoLog(v, DEBUG_BUFFER_SIZE, NULL, error);
-	if(!ok) {
-		printf(error);
-
-		SYS_exit_group(-1);
-		__builtin_unreachable();
-	}
-#endif
-
-	// link shader
+	GLuint p;
 	glGenProgramPipelines(1, &p);
 	glUseProgramStages(p, GL_VERTEX_SHADER_BIT, v);
 	glUseProgramStages(p, GL_FRAGMENT_SHADER_BIT, f);
 	glBindProgramPipeline(p);
 
+#if defined(DEBUG_FRAG) || defined(DEBUG_VERT)
+	char error[DEBUG_BUFFER_SIZE];
+	if ((p = glGetError()) != GL_NO_ERROR) { //use p to hold the error, lmao
+#ifdef DEBUG_FRAG
+		glGetProgramInfoLog(f, DEBUG_BUFFER_SIZE, NULL, error);
+		printf(error);
+#endif
+#ifdef DEBUG_VERT
+		glGetProgramInfoLog(v, DEBUG_BUFFER_SIZE, NULL, error);
+		printf(error);
+#endif
+		SYS_exit_group(p);
+		__builtin_unreachable();
+	}
+#endif
+
+	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 }
@@ -108,8 +96,8 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 
   for (int i = 0; i < 40; i += 2) {
 		glDrawArrays(GL_TRIANGLE_STRIP, i, 4);
-		glFinish();
 #ifdef EXIT_DURING_RENDER
+		glFinish();
 		while (gtk_events_pending()) gtk_main_iteration();
 #endif
   }
