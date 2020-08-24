@@ -67,7 +67,7 @@ $(PROJNAME).o : $(PROJNAME).c shader.h Makefile
 	gcc -c -o $@ $< $(CFLAGS)
 
 $(PROJNAME).elf.smol : $(PROJNAME).o
-	python3 ./smol/smold.py --smolrt "$(PWD)/smol/rt" --smolld "$(PWD)/smol/ld" -fuse-interp $(LDFLAGS) $< $@
+	python3 ./smol/smold.py --smolrt "$(PWD)/smol/rt" --smolld "$(PWD)/smol/ld" --det -fuse-interp -fuse-dnload-loader -fskip-zero-value --crc32c --debugout $(PROJNAME).elf.smol.dbg --ldflags=-Wl,-Map=$(PROJNAME).elf.smol.map $(LDFLAGS) $< $@
 
 $(PROJNAME)_unpacked : $(PROJNAME).c shader.h Makefile
 	gcc -o $@ $< $(CFLAGS) $(LDFLAGS)

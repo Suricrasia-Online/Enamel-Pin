@@ -16,13 +16,14 @@
 #include "sys.h"
 
 #include "shader.h"
-const char* vshader = "#version 420\nvoid main(){gl_Position=vec4(gl_VertexID%2==0?-1:1,gl_VertexID%4/2==0?-1:1,1,1);}";
-
+const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void main(){gl_Position=vec4(sin(gl_VertexID*2)*4,cos(gl_VertexID*2)*4,1,1);}";
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
 #define SCANLINE_SIZE 10
 
-#define DEBUG
+#define DEBUG_FRAG
+// #define DEBUG_VERT
+// #define DEBUG_PROG
 #define TIME_RENDER
 #define SCISSORS
 
@@ -55,70 +56,43 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 static void compile_shader()
 {
 	// compile shader
-	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
 
 	char* samples = getenv("SAMPLES");
 	if (samples == NULL) samples = "100";
 
 	const char* shader_frag_list[] = {"#version 420\n#define SAMPLES ", samples, "\n", shader_frag};
-	glShaderSource(f, 4, shader_frag_list, NULL);
-	glCompileShader(f);
+	GLuint f = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 4, shader_frag_list);
 
-#ifdef DEBUG
-	GLint isCompiled = 0;
-	glGetShaderiv(f, GL_COMPILE_STATUS, &isCompiled);
-	if(isCompiled == GL_FALSE) {
-		GLint maxLength = 0;
-		glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
-
-		char* error = malloc(maxLength);
-		glGetShaderInfoLog(f, maxLength, &maxLength, error);
-		printf("%s\n", error);
+#ifdef DEBUG_FRAG
+	GLint ok;
+	glGetProgramiv(f, GL_LINK_STATUS, &ok);
+	if(!ok) {
+		char error[4096];
+		glGetProgramInfoLog(f, 4096, NULL, error);
+		printf(error);
 
 		quit_asm();
 	}
 #endif
 
-	GLuint v = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(v, 1, &vshader, NULL);
-	glCompileShader(v);
+	GLuint v = glCreateShaderProgramv(GL_VERTEX_SHADER, 1, &vshader);
 
-#ifdef DEBUG
-	GLint isCompiled2 = 0;
-	glGetShaderiv(v, GL_COMPILE_STATUS, &isCompiled2);
-	if(isCompiled2 == GL_FALSE) {
-		GLint maxLength = 0;
-		glGetShaderiv(v, GL_INFO_LOG_LENGTH, &maxLength);
-
-		char* error = malloc(maxLength);
-		glGetShaderInfoLog(v, maxLength, &maxLength, error);
-		printf("%s\n", error);
+#ifdef DEBUG_VERT
+	glGetProgramiv(v, GL_LINK_STATUS, &ok);
+	if(!ok) {
+		char error[4096];
+		glGetProgramInfoLog(v, 4096, NULL, error);
+		printf(error);
 
 		quit_asm();
 	}
 #endif
 
 	// link shader
-	p = glCreateProgram();
-	glAttachShader(p,v);
-	glAttachShader(p,f);
-	glLinkProgram(p);
-	glUseProgram(p);
-
-#ifdef DEBUG
-	GLint isLinked = 0;
-	glGetProgramiv(p, GL_LINK_STATUS, (int *)&isLinked);
-	if (isLinked == GL_FALSE) {
-		GLint maxLength = 0;
-		glGetProgramiv(p, GL_INFO_LOG_LENGTH, &maxLength);
-
-		char* error = malloc(maxLength);
-		glGetProgramInfoLog(p, maxLength, &maxLength,error);
-		printf("%s\n", error);
-
-		quit_asm();
-	}
-#endif
+	glGenProgramPipelines(1, &p);
+	glUseProgramStages(p, GL_VERTEX_SHADER_BIT, v);
+	glUseProgramStages(p, GL_FRAGMENT_SHADER_BIT, f);
+	glBindProgramPipeline(p);
 
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -140,7 +114,7 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
   for (int i = 0; i < CANVAS_HEIGHT; i += SCANLINE_SIZE) {
 	  glScissor(0,i,CANVAS_WIDTH,SCANLINE_SIZE);
 #endif
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
 #ifdef SCISSORS
 		glFinish();
 		while (gtk_events_pending()) gtk_main_iteration();
