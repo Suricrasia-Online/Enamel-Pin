@@ -16,7 +16,7 @@
 #include "sys.h"
 
 #include "shader.h"
-const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void main(){gl_Position=vec4(gl_VertexID%2*8-4,gl_VertexID/2*8-1,1,1);}";
+const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void main(){gl_Position=vec4(gl_VertexID%2*2-1,gl_VertexID/2*.1-1,1,1);}";
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
 #define SCANLINE_SIZE 10
@@ -25,7 +25,7 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 // #define DEBUG_VERT
 #define DEBUG_BUFFER_SIZE 4096
 #define TIME_RENDER
-#define SCISSORS
+#define EXIT_DURING_RENDER
 
 GLuint vao;
 GLuint p;
@@ -106,19 +106,13 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 	rendered = true;
 	// glVertexAttrib1f(0, 0);
 
-#ifdef SCISSORS
-  glEnable(GL_SCISSOR_TEST);
-  for (int i = 0; i < CANVAS_HEIGHT; i += SCANLINE_SIZE) {
-	  glScissor(0,i,CANVAS_WIDTH,SCANLINE_SIZE);
-#endif
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
-#ifdef SCISSORS
+  for (int i = 0; i < 40; i += 2) {
+		glDrawArrays(GL_TRIANGLE_STRIP, i, 4);
 		glFinish();
+#ifdef EXIT_DURING_RENDER
 		while (gtk_events_pending()) gtk_main_iteration();
-  }
-#else
-	glFinish();
 #endif
+  }
 
 #ifdef TIME_RENDER
   printf("render time: %f\n", g_timer_elapsed(gtimer, NULL));
