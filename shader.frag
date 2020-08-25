@@ -168,6 +168,7 @@ float gabor(vec2 p, float u, float v, float r, float ph, float l, float t, float
 
 void main() {
 	fragCol = vec4(0);
+	if (gl_FragCoord.x>1920||gl_FragCoord.y>1080) { discard; return; }
 	vec2 uv = (gl_FragCoord.xy-vec2(960,540))/1080;
 	float sd = hash(uv.x,uv.y);
 	for (int i = 0; i < SAMPLES; i++) {
